@@ -16,7 +16,7 @@ def download():
     repo_id = f"Xenova/{repo_name}"
     
     print(f"Pre-downloading ONNX model files for {model_name} (repo: {repo_id}) to local cache {os.environ['HF_HOME']}...")
-    model_path = hf_hub_download(repo_id=repo_id, filename="onnx/model.onnx")
+    model_path = hf_hub_download(repo_id=repo_id, filename="onnx/model_quantized.onnx")
     tokenizer_path = hf_hub_download(repo_id=repo_id, filename="tokenizer.json")
     print("Download complete!")
     print(f"Model path: {model_path}")

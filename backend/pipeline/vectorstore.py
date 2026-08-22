@@ -40,7 +40,7 @@ class ONNXEmbedder:
         self.repo_id = f"Xenova/{repo_name}"
 
         logger.info("Downloading ONNX model files from HF repo: %s", self.repo_id)
-        self.model_path = hf_hub_download(repo_id=self.repo_id, filename="onnx/model.onnx")
+        self.model_path = hf_hub_download(repo_id=self.repo_id, filename="onnx/model_quantized.onnx")
         self.tokenizer_path = hf_hub_download(repo_id=self.repo_id, filename="tokenizer.json")
 
         logger.info("Loading tokenizer and ONNX session...")

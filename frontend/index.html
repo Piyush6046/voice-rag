@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="VoiceRAG — Voice-enabled multilingual RAG system built on MSMARCO-XI. Speak a question and get AI-powered answers grounded in the corpus." />
+<title>VoiceRAG — HH Goa 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   Variables
+============================================================ */
+:root {
+  --bg-base: #050811;
+  --bg-card: rgba(255,255,255,0.05);
+  --bg-card-hover: rgba(255,255,255,0.08);
+  --bg-surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+  --border-bright: rgba(255,255,255,0.18);
+  --purple: #7C3AED;
+  --purple-light: #9F67FF;
+  --blue: #2563EB;
+  --blue-light: #60A5FA;
+  --cyan: #06B6D4;
+  --green: #10B981;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --text: rgba(255,255,255,0.95);
+  --text-sec: rgba(255,255,255,0.6);
+  --text-muted: rgba(255,255,255,0.35);
+  --font: 'Inter', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xl: 24px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05) inset;
+  --t: 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg-base);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+
+/* ============================================================
+   HEADER
+============================================================ */
+.header{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;background:rgba(5,8,17,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.header-inner{max-width:1200px;margin:0 auto;height:100%;padding:0 24px;display:flex;align-items:center;gap:24px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-icon{width:32px;height:32px;flex-shrink:0}
+.logo-text{font-size:1.2rem;font-weight:700;letter-spacing:-0.02em}
+.logo-accent{color:var(--purple-light)}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav-btn{background:transparent;border:none;color:var(--text-sec);font-family:var(--font);font-size:0.875rem;font-weight:500;padding:6px 14px;border-radius:8px;cursor:pointer;transition:var(--t)}
+.nav-btn:hover{color:var(--text);background:rgba(255,255,255,0.07)}
+.nav-btn.active{color:var(--text);background:rgba(124,58,237,0.2);border:1px solid rgba(124,58,237,0.4)}
+.header-status{display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--text-muted);flex-shrink:0}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);transition:background var(--t)}
+.status-dot.ready{background:var(--green);animation:pulse-green 2s infinite}
+.status-dot.error{background:var(--red)}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.4)}50%{box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+
+/* ============================================================
+   HERO
+============================================================ */
+.hero{position:relative;padding:110px 24px 70px;text-align:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.28}
+.orb-1{width:600px;height:600px;background:radial-gradient(circle,var(--purple) 0%,transparent 70%);top:-200px;left:-150px;animation:orb-float 12s ease-in-out infinite}
+.orb-2{width:400px;height:400px;background:radial-gradient(circle,var(--blue) 0%,transparent 70%);top:-100px;right:-100px;animation:orb-float 10s ease-in-out infinite 2s}
+.orb-3{width:300px;height:300px;background:radial-gradient(circle,var(--cyan) 0%,transparent 70%);bottom:-100px;left:50%;animation:orb-float-c 8s ease-in-out infinite 1s}
+@keyframes orb-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-30px)}}
+@keyframes orb-float-c{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-30px)}}
+.grid-overlay{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 30%,transparent 80%)}
+.hero-content{position:relative;z-index:1;max-width:700px;margin:0 auto}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);border-radius:100px;padding:6px 16px;font-size:0.8rem;font-weight:500;color:var(--purple-light);margin-bottom:24px;letter-spacing:0.02em}
+.badge-dot{width:6px;height:6px;background:var(--purple-light);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+.hero-title{font-size:clamp(2.2rem,6vw,3.8rem);font-weight:800;line-height:1.1;letter-spacing:-0.03em;margin-bottom:18px}
+.gradient-text{background:linear-gradient(135deg,var(--purple-light) 0%,var(--blue-light) 50%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:1.05rem;color:var(--text-sec);line-height:1.65;margin-bottom:28px}
+.hero-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:100px;padding:7px 15px;font-size:0.82rem;font-weight:500;color:var(--text-sec);transition:var(--t)}
+.chip:hover{border-color:var(--border-bright);color:var(--text);background:var(--bg-card-hover)}
+
+/* ============================================================
+   PANELS
+============================================================ */
+.main-content{max-width:1200px;margin:0 auto;padding:0 24px 80px}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ============================================================
+   DEMO GRID
+============================================================ */
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media(max-width:860px){.demo-grid{grid-template-columns:1fr}}
+
+/* ============================================================
+   CARDS
+============================================================ */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;box-shadow:var(--shadow);backdrop-filter:blur(20px);transition:border-color var(--t)}
+.card:hover{border-color:var(--border-bright)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.card-title{font-size:1.05rem;font-weight:600}
+
+/* ============================================================
+   VOICE BUTTON
+============================================================ */
+.voice-section{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:22px}
+.voice-btn{position:relative;width:88px;height:88px;border-radius:50%;border:2px solid rgba(124,58,237,0.4);background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(37,99,235,0.2));cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--text)}
+.voice-btn:hover{border-color:rgba(124,58,237,0.8);transform:scale(1.05);box-shadow:0 4px 24px rgba(124,58,237,0.4)}
+.voice-btn:active{transform:scale(0.97)}
+.voice-btn.recording{border-color:var(--red);background:linear-gradient(135deg,rgba(239,68,68,0.25),rgba(239,68,68,0.15));animation:rec-pulse 1.5s ease-in-out infinite}
+@keyframes rec-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 20px rgba(239,68,68,0)}}
+.voice-ripple{position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(124,58,237,0.3);opacity:0;transition:var(--t)}
+.voice-btn:hover .voice-ripple{opacity:1;animation:ripple 1.5s ease-in-out infinite}
+@keyframes ripple{0%{transform:scale(1);opacity:0.5}100%{transform:scale(1.3);opacity:0}}
+.voice-label{font-size:0.875rem;color:var(--text-sec);font-weight:500}
+
+/* Waveform */
+.waveform{display:flex;align-items:center;gap:3px;height:36px;opacity:0;transition:opacity var(--t)}
+.waveform.active{opacity:1}
+.wave-bar{width:3px;height:4px;background:var(--purple-light);border-radius:2px;animation:wave 1.2s ease-in-out infinite}
+.wave-bar:nth-child(1){animation-delay:0s}.wave-bar:nth-child(2){animation-delay:0.1s}.wave-bar:nth-child(3){animation-delay:0.2s}
+.wave-bar:nth-child(4){animation-delay:0.3s}.wave-bar:nth-child(5){animation-delay:0.4s}.wave-bar:nth-child(6){animation-delay:0.25s}
+.wave-bar:nth-child(7){animation-delay:0.15s}.wave-bar:nth-child(8){animation-delay:0.35s}.wave-bar:nth-child(9){animation-delay:0.05s}
+@keyframes wave{0%,100%{height:4px}50%{height:28px}}
+
+/* Transcript */
+.transcript-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:18px;min-height:66px}
+.transcript-lbl{font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px}
+.transcript-txt{font-size:0.9rem;line-height:1.5;color:var(--text);font-family:var(--mono)}
+.ph{color:var(--text-muted);font-style:italic;font-family:var(--font)}
+
+/* OR divider */
+.or-div{display:flex;align-items:center;gap:12px;margin:14px 0;color:var(--text-muted);font-size:0.78rem}
+.or-div::before,.or-div::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Text input */
+.text-row{display:flex;gap:8px;margin-bottom:18px}
+.text-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;font-family:var(--font);font-size:0.875rem;color:var(--text);outline:none;transition:var(--t)}
+.text-inp::placeholder{color:var(--text-muted)}
+.text-inp:focus{border-color:rgba(124,58,237,0.5);background:rgba(124,58,237,0.05);box-shadow:0 0 0 3px rgba(124,58,237,0.1)}
+.text-inp:disabled{opacity:0.5}
+.send-btn{width:44px;height:44px;flex-shrink:0;border-radius:var(--radius);border:none;background:linear-gradient(135deg,var(--purple),var(--blue));color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:var(--t);box-shadow:0 4px 16px rgba(124,58,237,0.3)}
+.send-btn:hover{transform:scale(1.05);box-shadow:0 4px 24px rgba(124,58,237,0.5)}
+.send-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* Pipeline steps */
+.p-steps{display:flex;align-items:center;gap:0;margin-top:4px}
+.p-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.p-step span{font-size:0.67rem;color:var(--text-muted);transition:color var(--t)}
+.p-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.1);transition:all var(--t)}
+.p-step.active .p-dot{background:var(--purple-light);border-color:var(--purple-light);box-shadow:0 0 12px rgba(159,103,255,0.6);animation:step-pulse 1s ease-in-out infinite}
+@keyframes step-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+.p-step.done .p-dot{background:var(--green);border-color:var(--green)}
+.p-step.done span,.p-step.active span{color:var(--text)}
+.p-line{flex:1;height:1px;background:rgba(255,255,255,0.1);margin-bottom:14px;max-width:40px}
+
+/* ============================================================
+   OUTPUT CARD
+============================================================ */
+.guard-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius);margin-bottom:18px;transition:all var(--t)}
+.guard-bar.blocked{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2)}
+.guard-bar.warn{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2)}
+.guard-icon{font-size:16px;flex-shrink:0}
+.guard-txt{font-size:0.82rem;font-weight:500;color:var(--green);flex:1;transition:color var(--t)}
+.guard-bar.blocked .guard-txt{color:var(--red)}
+.guard-bar.warn .guard-txt{color:var(--amber)}
+
+.ans-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ans-title{font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em}
+.copy-btn{background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;color:var(--text-muted);font-size:0.75rem;transition:var(--t)}
+.copy-btn:hover{color:var(--text);border-color:var(--border-bright)}
+
+.ans-box{min-height:130px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+.ans-placeholder{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:10px 0}
+.ans-placeholder p{font-size:0.85rem;color:var(--text-muted)}
+.ph-anim{display:flex;align-items:center;gap:12px}
+.ph-circle{width:38px;height:38px;border-radius:50%;background:var(--bg-surface);flex-shrink:0}
+.ph-lines{display:flex;flex-direction:column;gap:6px}
+.ph-line{height:8px;border-radius:4px;background:var(--bg-surface)}
+.ph-long{width:170px}.ph-med{width:130px}.ph-short{width:90px}
+.ans-text{font-size:0.975rem;line-height:1.75;color:var(--text)}
+.ans-blocked{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.blocked-icon{font-size:2rem}
+.blocked-reason{font-size:0.875rem;color:var(--text-sec);line-height:1.5}
+
+/* Sources */
+.sources-title{font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px}
+.source-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;transition:var(--t)}
+.source-card:last-child{margin-bottom:0}
+.source-card:hover{border-color:var(--border-bright);background:var(--bg-card-hover)}
+.source-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.strat-badge{font-size:0.67rem;font-weight:600;padding:2px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:0.05em}
+.strat-fixed{background:rgba(37,99,235,0.2);color:var(--blue-light);border:1px solid rgba(37,99,235,0.3)}
+.strat-sentence{background:rgba(6,182,212,0.2);color:var(--cyan);border:1px solid rgba(6,182,212,0.3)}
+.strat-semantic,.strat-precomputed{background:rgba(124,58,237,0.2);color:var(--purple-light);border:1px solid rgba(124,58,237,0.3)}
+.strat-unknown{background:rgba(255,255,255,0.05);color:var(--text-muted);border:1px solid var(--border)}
+.source-score{font-size:0.72rem;color:var(--text-muted);font-family:var(--mono);margin-left:auto}
+.source-text{font-size:0.8rem;color:var(--text-sec);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Latency bar */
+.lat-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);margin-top:16px}
+.lat-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.lat-lbl{font-size:0.67rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em}
+.lat-val{font-size:0.875rem;font-weight:600;color:var(--text);font-family:var(--mono)}
+.lat-val.fast{color:var(--green)}.lat-val.warn{color:var(--amber)}.lat-val.total{color:var(--purple-light)}
+.lat-sep{width:1px;height:28px;background:var(--border)}
+
+/* Guardrail trace */
+.trace-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:0.82rem}
+.trace-row:last-child{border-bottom:none;padding-bottom:0}
+.trace-row:first-child{padding-top:0}
+.trace-tag{font-size:0.68rem;font-weight:600;padding:2px 9px;border-radius:100px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.trace-tag.pass{background:rgba(16,185,129,0.15);color:var(--green)}
+.trace-tag.fail{background:rgba(239,68,68,0.15);color:var(--red)}
+.trace-stage{font-family:var(--mono);font-size:0.72rem;color:var(--text-muted);flex-shrink:0;min-width:100px;margin-top:3px}
+.trace-reason{color:var(--text-sec);line-height:1.5}
+
+/* History */
+.history-section{margin-top:28px}
+.sec-title{font-size:1.05rem;font-weight:700;letter-spacing:-0.01em;margin-bottom:14px}
+.history-empty{font-size:0.875rem;color:var(--text-muted);text-align:center;padding:22px}
+.history-item{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:var(--t);margin-bottom:8px}
+.history-item:hover{border-color:var(--border-bright);background:var(--bg-card-hover)}
+.history-icon{width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.875rem}
+.history-q{flex:1;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-ms{font-size:0.72rem;color:var(--text-muted);font-family:var(--mono);flex-shrink:0}
+.h-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.h-dot.ok{background:var(--green)}.h-dot.blocked{background:var(--amber)}.h-dot.error{background:var(--red)}
+
+/* ============================================================
+   ANALYTICS PANEL
+============================================================ */
+.analytics-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.refresh-btn{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:8px 15px;font-family:var(--font);font-size:0.82rem;color:var(--text-sec);cursor:pointer;transition:var(--t)}
+.refresh-btn:hover{border-color:var(--border-bright);color:var(--text)}
+.ac-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:700px){.ac-cards{grid-template-columns:repeat(2,1fr)}}
+.ac-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;text-align:center}
+.ac-lbl{font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px}
+.ac-val{font-size:1.7rem;font-weight:700;color:var(--text);font-family:var(--mono)}
+.ac-val.good{color:var(--green)}
+.analytics-note{font-size:0.82rem;color:var(--text-muted);text-align:center;padding:32px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)}
+
+/* ============================================================
+   ABOUT PANEL
+============================================================ */
+.about-content{max-width:900px}
+.arch-diagram{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:36px;padding:22px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl)}
+.arch-node{flex:1;min-width:110px;text-align:center;padding:16px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);transition:var(--t)}
+.arch-node:hover{border-color:var(--border-bright)}
+.arch-node.hl{background:rgba(124,58,237,0.1);border-color:rgba(124,58,237,0.3)}
+.arch-icon{font-size:1.5rem;margin-bottom:7px}
+.arch-lbl{font-size:0.78rem;font-weight:600;margin-bottom:3px}
+.arch-sub{font-size:0.68rem;color:var(--text-muted)}
+.arch-arrow{color:var(--text-muted);font-size:1.1rem;flex-shrink:0}
+
+.sub-title{font-size:0.975rem;font-weight:600;margin-bottom:14px}
+.chunk-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
+@media(max-width:700px){.chunk-cards{grid-template-columns:1fr}}
+.chunk-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;transition:var(--t)}
+.chunk-card:hover{border-color:var(--border-bright);transform:translateY(-2px)}
+.chunk-num{font-size:3rem;font-weight:800;color:rgba(255,255,255,0.04);position:absolute;top:-8px;right:10px;font-family:var(--mono);line-height:1}
+.chunk-card h4{font-size:0.9rem;font-weight:600;margin-bottom:7px}
+.chunk-card p{font-size:0.8rem;line-height:1.6;color:var(--text-sec);margin-bottom:11px}
+.chunk-tag-sm{display:inline-block;font-size:0.68rem;font-weight:600;padding:2px 9px;border-radius:100px;background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.3);color:var(--purple-light);text-transform:uppercase;letter-spacing:0.05em}
+
+.gr-list{display:flex;flex-direction:column;gap:9px;margin-bottom:32px}
+.gr-item{display:flex;align-items:flex-start;gap:12px;padding:13px 15px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)}
+.gr-badge{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:700;letter-spacing:0.04em;flex-shrink:0}
+.gr-badge.in{background:rgba(37,99,235,0.2);color:var(--blue-light);border:1px solid rgba(37,99,235,0.3)}
+.gr-badge.out{background:rgba(16,185,129,0.2);color:var(--green);border:1px solid rgba(16,185,129,0.3)}
+.gr-heading{font-size:0.875rem;font-weight:600;margin-bottom:2px}
+.gr-desc{font-size:0.78rem;color:var(--text-sec)}
+
+.tech-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+@media(max-width:700px){.tech-grid{grid-template-columns:repeat(2,1fr)}}
+.tech-item{display:flex;flex-direction:column;gap:4px;padding:13px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)}
+.tech-lbl{font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em}
+.tech-val{font-size:0.8rem;font-weight:500}
+
+/* ============================================================
+   LOADING BAR
+============================================================ */
+#loadingBar{height:3px;background:linear-gradient(90deg,var(--purple),var(--purple-light),var(--cyan));background-size:200% 100%;border-radius:2px;margin-bottom:18px;display:none;animation:slide-bg 1.5s linear infinite}
+#loadingBar.active{display:block}
+@keyframes slide-bg{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+/* ============================================================
+   TOAST
+============================================================ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(20,20,40,0.95);border:1px solid var(--border);border-radius:var(--radius);padding:11px 18px;font-size:0.875rem;backdrop-filter:blur(20px);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);z-index:999;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Cursor */
+.cursor{display:inline-block;width:2px;height:1.1em;background:var(--purple-light);margin-left:2px;vertical-align:text-bottom;animation:cur 0.8s ease-in-out infinite}
+@keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="14" fill="url(#g1)"/>
+          <path d="M12 10h8M10 14h12M12 18h8M14 22h4" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#7C3AED"/><stop offset="1" stop-color="#2563EB"/></linearGradient></defs>
+        </svg>
+      </div>
+      <span class="logo-text">Voice<span class="logo-accent">RAG</span></span>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" id="nav-demo" onclick="showPanel('demo')">Demo</button>
+      <button class="nav-btn" id="nav-analytics" onclick="showPanel('analytics')">Analytics</button>
+      <button class="nav-btn" id="nav-about" onclick="showPanel('about')">About</button>
+    </nav>
+    <div class="header-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusLabel">Connecting…</span>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="badge-dot"></span>HH Goa 2026 · Task 2 · RAG System</div>
+    <h1 class="hero-title">Ask with your<br/><span class="gradient-text">Voice. Get Answers.</span></h1>
+    <p class="hero-sub">Multilingual RAG pipeline powered by Sarvam AI speech-to-text, three-strategy semantic chunking, and Gemini 1.5 Flash — grounded only in what was retrieved.</p>
+    <div class="hero-chips">
+      <div class="chip">🗣️ Voice Input</div>
+      <div class="chip">🔍 Semantic Retrieval</div>
+      <div class="chip">⚡ Fast RAG</div>
+      <div class="chip">🛡️ Guardrails</div>
+      <div class="chip">🌏 Multilingual</div>
+    </div>
+  </div>
+</section>
+
+<main class="main-content">
+
+<!-- ===================== DEMO PANEL ===================== -->
+<div class="panel active" id="panel-demo">
+  <div id="loadingBar"></div>
+  <div class="demo-grid">
+
+    <!-- Left: Input Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Ask a Question</h2>
+      </div>
+
+      <div class="voice-section">
+        <button class="voice-btn" id="micBtn" title="Click to speak">
+          🎙️
+          <div class="voice-ripple"></div>
+        </button>
+        <div class="voice-label" id="voiceLabel">Click to speak</div>
+        <div class="waveform" id="waveform">
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        </div>
+      </div>
+
+      <div class="transcript-box">
+        <div class="transcript-lbl">Transcript</div>
+        <div class="transcript-txt" id="transcriptTxt"><span class="ph">Your spoken words will appear here…</span></div>
+      </div>
+
+      <div class="or-div"><span>or type your question</span></div>
+
+      <div class="text-row">
+        <input type="text" id="textInput" class="text-inp" placeholder="e.g. What is the Reserve Bank of India responsible for?" autocomplete="off" />
+        <button class="send-btn" id="sendBtn">→</button>
+      </div>
+
+      <!-- Pipeline steps -->
+      <div class="p-steps">
+        <div class="p-step" id="ps-guard"><div class="p-dot"></div><span>Guard</span></div>
+        <div class="p-line"></div>
+        <div class="p-step" id="ps-retrieve"><div class="p-dot"></div><span>Retrieve</span></div>
+        <div class="p-line"></div>
+        <div class="p-step" id="ps-generate"><div class="p-dot"></div><span>Generate</span></div>
+        <div class="p-line"></div>
+        <div class="p-step" id="ps-check"><div class="p-dot"></div><span>Check</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Output Card -->
+    <div class="card">
+      <div class="guard-bar" id="guardBar">
+        <span class="guard-icon">🛡️</span>
+        <span class="guard-txt" id="guardTxt">Guardrails Active</span>
+      </div>
+
+      <div class="ans-header">
+        <div class="ans-title">Answer</div>
+        <button class="copy-btn" id="copyBtn" style="display:none" onclick="copyAnswer()">Copy</button>
+      </div>
+      <div class="ans-box" id="ansBox">
+        <div class="ans-placeholder" id="ansPlaceholder">
+          <div class="ph-anim"><div class="ph-circle"></div><div class="ph-lines"><div class="ph-line ph-long"></div><div class="ph-line ph-med"></div><div class="ph-line ph-short"></div></div></div>
+          <p>Ask a question using voice or text to see AI-generated answers here.</p>
+        </div>
+        <div class="ans-text" id="ansTxt" style="display:none"></div>
+        <div class="ans-blocked" id="ansBlocked" style="display:none">
+          <div class="blocked-icon">🛡️</div>
+          <div class="blocked-reason" id="blockedReason"></div>
+        </div>
+      </div>
+
+      <!-- Sources -->
+      <div id="sourcesSection" style="display:none">
+        <div class="sources-title">Retrieved Sources</div>
+        <div id="sourcesList"></div>
+      </div>
+
+      <!-- Guardrail trace -->
+      <div id="traceSection" style="display:none">
+        <div class="sources-title" style="margin-top:16px">Guardrail Trace</div>
+        <div id="traceList"></div>
+      </div>
+
+      <!-- Latency -->
+      <div class="lat-bar" id="latBar" style="display:none">
+        <div class="lat-item"><div class="lat-lbl">Retrieval</div><div class="lat-val" id="latRet">—</div></div>
+        <div class="lat-sep"></div>
+        <div class="lat-item"><div class="lat-lbl">Guardrails</div><div class="lat-val" id="latGuard">—</div></div>
+        <div class="lat-sep"></div>
+        <div class="lat-item"><div class="lat-lbl">Generation</div><div class="lat-val" id="latGen">—</div></div>
+        <div class="lat-sep"></div>
+        <div class="lat-item"><div class="lat-lbl">Total</div><div class="lat-val total" id="latTotal">—</div></div>
+      </div>
+    </div>
+
+  </div><!-- /demo-grid -->
+
+  <!-- History -->
+  <div class="history-section">
+    <h3 class="sec-title">Recent Queries</h3>
+    <div id="historyList"><div class="history-empty">No queries yet — ask something!</div></div>
+  </div>
+</div>
+
+<!-- ===================== ANALYTICS PANEL ===================== -->
+<div class="panel" id="panel-analytics">
+  <div class="analytics-hdr">
+    <h2 class="sec-title" style="margin-bottom:0">Latency Analytics</h2>
+    <button class="refresh-btn" onclick="checkHealth()">↻ Refresh</button>
+  </div>
+  <div class="ac-cards">
+    <div class="ac-card"><div class="ac-lbl">Total Queries</div><div class="ac-val" id="acTotal">—</div></div>
+    <div class="ac-card"><div class="ac-lbl">Vectors Indexed</div><div class="ac-val" id="acVecs">—</div></div>
+    <div class="ac-card"><div class="ac-lbl">Embedding Model</div><div class="ac-val" style="font-size:0.75rem;line-height:1.4" id="acModel">—</div></div>
+    <div class="ac-card"><div class="ac-lbl">Index</div><div class="ac-val" style="font-size:0.9rem" id="acIndex">—</div></div>
+  </div>
+  <div class="analytics-note" id="analyticsNote">Query stats accumulate in the session. Ask questions on the Demo tab to see latency data here.</div>
+  <div id="analyticsLatency" style="display:none"></div>
+</div>
+
+<!-- ===================== ABOUT PANEL ===================== -->
+<div class="panel" id="panel-about">
+  <div class="about-content">
+    <h2 class="sec-title">Architecture</h2>
+
+    <div class="arch-diagram">
+      <div class="arch-node"><div class="arch-icon">🎙️</div><div class="arch-lbl">Voice Input</div><div class="arch-sub">Browser MediaRecorder</div></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node"><div class="arch-icon">🔤</div><div class="arch-lbl">Sarvam STT</div><div class="arch-sub">saaras:v2</div></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node hl"><div class="arch-icon">🔍</div><div class="arch-lbl">Pinecone Search</div><div class="arch-sub">multilingual-e5-base</div></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-node"><div class="arch-icon">⚡</div><div class="arch-lbl">Gemini 1.5 Flash</div><div class="arch-sub">Grounded generation</div></div>
+    </div>
+
+    <div class="sub-title">Chunking Strategies</div>
+    <div class="chunk-cards">
+      <div class="chunk-card"><div class="chunk-num">01</div><h4>Semantic Chunking</h4><p>Groups sentences by cosine similarity using the embedding model. A new chunk begins when similarity drops below the threshold. Captures coherent semantic units.</p><span class="chunk-tag-sm">Primary strategy</span></div>
+      <div class="chunk-card"><div class="chunk-num">02</div><h4>Fixed-Size Overlap</h4><p>Fixed word windows with overlap. Rich metadata: chunk_index, passage_id. Safety net ensuring no boundary information is lost.</p><span class="chunk-tag-sm">Recall safety net</span></div>
+      <div class="chunk-card"><div class="chunk-num">03</div><h4>Sentence Window</h4><p>Groups consecutive sentences together with overlap. Best for preserving sentence boundaries that fixed token windows would break.</p><span class="chunk-tag-sm">Precision booster</span></div>
+    </div>
+
+    <div class="sub-title">Guardrail Layers</div>
+    <div class="gr-list">
+      <div class="gr-item"><div class="gr-badge in">IN</div><div><div class="gr-heading">Input Safety Filter</div><div class="gr-desc">Regex-based detection of unsafe/harmful/jailbreak content patterns before any retrieval</div></div></div>
+      <div class="gr-item"><div class="gr-badge out">OUT</div><div><div class="gr-heading">Off-Topic Guard</div><div class="gr-desc">Checks if the best retrieval score exceeds the similarity threshold — refuses if the corpus likely doesn't cover the query</div></div></div>
+      <div class="gr-item"><div class="gr-badge out">OUT</div><div><div class="gr-heading">Grounding Check (Token F1)</div><div class="gr-desc">Answer must achieve minimum token overlap with retrieved context to be accepted</div></div></div>
+      <div class="gr-item"><div class="gr-badge out">OUT</div><div><div class="gr-heading">LLM Hallucination Self-Check</div><div class="gr-desc">Second-line LLM-based check: asks "is this answer supported by the context?" before falling back to refusal</div></div></div>
+    </div>
+
+    <div class="sub-title">Tech Stack</div>
+    <div class="tech-grid">
+      <div class="tech-item"><div class="tech-lbl">STT</div><div class="tech-val">Sarvam AI</div></div>
+      <div class="tech-item"><div class="tech-lbl">Embeddings</div><div class="tech-val">multilingual-e5-base</div></div>
+      <div class="tech-item"><div class="tech-lbl">Vector DB</div><div class="tech-val">Pinecone (cloud)</div></div>
+      <div class="tech-item"><div class="tech-lbl">Generation</div><div class="tech-val">Gemini 1.5 Flash</div></div>
+      <div class="tech-item"><div class="tech-lbl">Backend</div><div class="tech-val">FastAPI + asyncio</div></div>
+      <div class="tech-item"><div class="tech-lbl">Dataset</div><div class="tech-val">ai4bharat/MSMARCO-XI</div></div>
+      <div class="tech-item"><div class="tech-lbl">Chunking</div><div class="tech-val">3 strategies</div></div>
+      <div class="tech-item"><div class="tech-lbl">Guardrails</div><div class="tech-val">4-layer pipeline</div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+const API = '';
+
+// ---- State ----
+const state = { isRecording: false, mediaRecorder: null, audioChunks: [], currentAnswer: '', history: [], busy: false };
+
+// ---- Panel nav ----
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'analytics') renderAnalytics();
+}
+
+// ---- Pipeline steps ----
+const STEPS = ['guard', 'retrieve', 'generate', 'check'];
+function setStep(name, cls) {
+  const el = document.getElementById('ps-' + name);
+  if (el) { el.classList.remove('active', 'done'); if (cls) el.classList.add(cls); }
+}
+function resetSteps() { STEPS.forEach(s => setStep(s, null)); }
+function activateSteps(names) { names.forEach(n => setStep(n, 'active')); }
+function doneStep(name) { setStep(name, 'done'); }
+
+// ---- Toast ----
+let toastT;
+function toast(msg, dur = 3200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+// ---- Status ----
+function setStatus(cls, label) {
+  document.getElementById('statusDot').className = 'status-dot ' + cls;
+  document.getElementById('statusLabel').textContent = label;
+}
+
+// ---- Health check ----
+async function checkHealth() {
+  try {
+    const r = await fetch(API + '/api/health');
+    const d = await r.json();
+    const vecs = d.total_vectors ? d.total_vectors.toLocaleString() : '87';
+    setStatus('ready', `Ready · ${vecs} vectors`);
+    document.getElementById('acTotal').textContent = state.history.length;
+    document.getElementById('acVecs').textContent = vecs;
+    document.getElementById('acModel').textContent = (d.embedding_model || 'multilingual-e5-base').split('/').pop();
+    document.getElementById('acIndex').textContent = d.index_name || 'voice-rag';
+  } catch (e) {
+    setStatus('error', 'Server offline');
+  }
+}
+
+// ---- Reset output area ----
+function resetOutput() {
+  state.currentAnswer = '';
+  document.getElementById('ansPlaceholder').style.display = '';
+  document.getElementById('ansTxt').style.display = 'none';
+  document.getElementById('ansTxt').innerHTML = '';
+  document.getElementById('ansBlocked').style.display = 'none';
+  document.getElementById('copyBtn').style.display = 'none';
+  document.getElementById('sourcesSection').style.display = 'none';
+  document.getElementById('traceSection').style.display = 'none';
+  document.getElementById('latBar').style.display = 'none';
+  document.getElementById('sourcesList').innerHTML = '';
+  document.getElementById('traceList').innerHTML = '';
+  document.getElementById('guardBar').className = 'guard-bar';
+  document.getElementById('guardTxt').textContent = 'Guardrails Active';
+  resetSteps();
+}
+
+function disableInput(busy) {
+  state.busy = busy;
+  document.getElementById('textInput').disabled = busy;
+  document.getElementById('sendBtn').disabled = busy;
+}
+
+// ---- Render response ----
+function renderResponse(body) {
+  // Guard bar
+  const guardBar = document.getElementById('guardBar');
+  const guardTxt = document.getElementById('guardTxt');
+  if (body.status === 'answered') {
+    guardBar.className = 'guard-bar';
+    guardTxt.textContent = 'All guardrails passed';
+  } else if (body.status === 'refused') {
+    guardBar.className = 'guard-bar blocked';
+    guardTxt.textContent = 'Blocked: ' + (body.refusal_reason || 'guardrail triggered');
+  } else {
+    guardBar.className = 'guard-bar warn';
+    guardTxt.textContent = body.error || 'Pipeline error';
+  }
+
+  // Transcript
+  if (body.transcript) {
+    document.getElementById('transcriptTxt').textContent = body.transcript;
+  }
+
+  // Answer
+  const ph = document.getElementById('ansPlaceholder');
+  const ansEl = document.getElementById('ansTxt');
+  const blk = document.getElementById('ansBlocked');
+  ph.style.display = 'none';
+
+  if (body.status === 'answered') {
+    ansEl.style.display = '';
+    blk.style.display = 'none';
+    typeAnswer(body.answer || '', ansEl);
+    document.getElementById('copyBtn').style.display = '';
+  } else if (body.status === 'refused') {
+    ansEl.style.display = 'none';
+    blk.style.display = 'flex';
+    document.getElementById('blockedReason').textContent = body.refusal_reason || 'Guardrail blocked this query.';
+  } else {
+    ansEl.style.display = 'none';
+    blk.style.display = 'flex';
+    document.getElementById('blockedReason').textContent = body.error || 'An error occurred.';
+  }
+
+  // Sources / chunks
+  const chunks = body.retrieved_chunks || [];
+  if (chunks.length) {
+    document.getElementById('sourcesSection').style.display = '';
+    const list = document.getElementById('sourcesList');
+    list.innerHTML = '';
+    chunks.forEach(c => {
+      const strat = (c.strategy || 'unknown').replace('metadata_aware::', '');
+      const cls = strat.includes('fixed') ? 'strat-fixed' : strat.includes('sentence') ? 'strat-sentence' : strat === 'precomputed' ? 'strat-precomputed' : 'strat-unknown';
+      const div = document.createElement('div');
+      div.className = 'source-card';
+      div.innerHTML = `<div class="source-head"><span class="strat-badge ${cls}">${strat}</span><span class="source-score">${c.score ? c.score.toFixed(3) : ''}</span></div><div class="source-text">${esc(c.text)}</div>`;
+      list.appendChild(div);
+    });
+  }
+
+  // Guardrail trace
+  const trace = body.guardrail_trace || [];
+  if (trace.length) {
+    document.getElementById('traceSection').style.display = '';
+    const tl = document.getElementById('traceList');
+    tl.innerHTML = '';
+    trace.forEach(g => {
+      const d = document.createElement('div');
+      d.className = 'trace-row';
+      d.innerHTML = `<span class="trace-tag ${g.passed ? 'pass' : 'fail'}">${g.passed ? '✓ pass' : '✕ fail'}</span><span class="trace-stage">${esc(g.stage)}</span><span class="trace-reason">${esc(g.reason || '')}</span>`;
+      tl.appendChild(d);
+    });
+  }
+
+  // Latency
+  const t = body.timings || {};
+  if (t.total_ms) {
+    document.getElementById('latBar').style.display = 'flex';
+    setLat('latRet', t.retrieval_ms);
+    setLat('latGuard', t.guardrail_ms);
+    setLat('latGen', t.generation_ms);
+    setLat('latTotal', t.total_ms);
+  }
+
+  // All pipeline steps done
+  STEPS.forEach(s => doneStep(s));
+}
+
+function setLat(id, ms) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = ms ? Math.round(ms) + 'ms' : '—';
+  if (ms) el.className = 'lat-val ' + (ms < 100 ? 'fast' : ms < 300 ? '' : 'warn') + (id === 'latTotal' ? ' total' : '');
+}
+
+function typeAnswer(text, el) {
+  el.innerHTML = '';
+  state.currentAnswer = text;
+  // Show text immediately for REST API responses (no streaming)
+  el.textContent = text;
+}
+
+// ---- Run text query ----
+async function runTextQuery(query) {
+  if (!query || state.busy) return;
+  resetOutput();
+  disableInput(true);
+  document.getElementById('transcriptTxt').innerHTML = '<span class="ph">' + esc(query) + '</span>';
+  document.getElementById('loadingBar').classList.add('active');
+  activateSteps(STEPS);
+
+  try {
+    const r = await fetch(API + '/api/query/text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: query })
+    });
+    const body = await r.json();
+    renderResponse(body);
+    addHistory({ query, status: body.status, ms: body.timings?.total_ms });
+  } catch (e) {
+    toast('❌ Request failed: ' + e.message);
+    document.getElementById('guardBar').className = 'guard-bar warn';
+    document.getElementById('guardTxt').textContent = 'Server error';
+  } finally {
+    document.getElementById('loadingBar').classList.remove('active');
+    disableInput(false);
+  }
+}
+
+// ---- Text input handlers ----
+document.getElementById('sendBtn').addEventListener('click', () => {
+  const v = document.getElementById('textInput').value.trim();
+  if (v) { document.getElementById('textInput').value = ''; runTextQuery(v); }
+});
+document.getElementById('textInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const v = e.target.value.trim(); if (v) { e.target.value = ''; runTextQuery(v); } }
+});
+
+// ---- Voice recording ----
+const micBtn = document.getElementById('micBtn');
+const voiceLabel = document.getElementById('voiceLabel');
+const waveform = document.getElementById('waveform');
+
+micBtn.addEventListener('click', async () => {
+  if (state.busy && !state.isRecording) return;
+  if (state.isRecording) {
+    state.mediaRecorder?.stop();
+    state.isRecording = false;
+    micBtn.className = 'voice-btn';
+    micBtn.innerHTML = '🎙️<div class="voice-ripple"></div>';
+    waveform.classList.remove('active');
+    voiceLabel.textContent = 'Processing…';
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      state.audioChunks = [];
+      state.mediaRecorder = new MediaRecorder(stream);
+      state.mediaRecorder.ondataavailable = e => state.audioChunks.push(e.data);
+      state.mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(state.audioChunks, { type: 'audio/webm' });
+        await runVoiceQuery(blob);
+      };
+      state.mediaRecorder.start();
+      state.isRecording = true;
+      micBtn.className = 'voice-btn recording';
+      micBtn.innerHTML = '■<div class="voice-ripple"></div>';
+      waveform.classList.add('active');
+      voiceLabel.textContent = 'Recording… click to stop';
+    } catch (e) {
+      toast('🎤 Mic error: ' + e.message, 4000);
+    }
+  }
+});
+
+async function runVoiceQuery(blob) {
+  resetOutput();
+  disableInput(true);
+  document.getElementById('loadingBar').classList.add('active');
+  activateSteps(STEPS);
+  voiceLabel.textContent = 'Processing…';
+
+  const fd = new FormData();
+  fd.append('audio', blob, 'query.webm');
+  try {
+    const r = await fetch(API + '/api/query/voice', { method: 'POST', body: fd });
+    const body = await r.json();
+    if (body.transcript) document.getElementById('transcriptTxt').textContent = body.transcript;
+    renderResponse(body);
+    addHistory({ query: body.transcript || '(voice query)', status: body.status, ms: body.timings?.total_ms });
+  } catch (e) {
+    toast('❌ Voice query failed: ' + e.message);
+  } finally {
+    document.getElementById('loadingBar').classList.remove('active');
+    disableInput(false);
+    voiceLabel.textContent = 'Click to speak';
+  }
+}
+
+// ---- History ----
+function addHistory(item) {
+  state.history.unshift(item);
+  if (state.history.length > 15) state.history.pop();
+  renderHistory();
+  document.getElementById('acTotal').textContent = state.history.length;
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!state.history.length) { el.innerHTML = '<div class="history-empty">No queries yet — ask something!</div>'; return; }
+  el.innerHTML = state.history.slice(0, 8).map((h, i) => `
+    <div class="history-item" onclick="replayHistory(${i})">
+      <div class="history-icon">${h.status === 'answered' ? '✓' : h.status === 'refused' ? '🛡️' : '❌'}</div>
+      <div class="history-q">${esc(h.query || '—')}</div>
+      <div class="history-ms">${h.ms ? Math.round(h.ms) + 'ms' : '—'}</div>
+      <div class="h-dot ${h.status === 'answered' ? 'ok' : h.status === 'refused' ? 'blocked' : 'error'}"></div>
+    </div>`).join('');
+}
+
+function replayHistory(i) {
+  const item = state.history[i];
+  if (!item) return;
+  document.getElementById('textInput').value = item.query;
+  runTextQuery(item.query);
+}
+
+// ---- Analytics ----
+function renderAnalytics() {
+  checkHealth();
+  if (!state.history.length) return;
+  const msList = state.history.filter(h => h.ms).map(h => h.ms);
+  if (!msList.length) return;
+  msList.sort((a, b) => a - b);
+  const p50 = msList[Math.floor(msList.length * 0.5)];
+  const p90 = msList[Math.floor(msList.length * 0.9)];
+  const mean = msList.reduce((a, b) => a + b, 0) / msList.length;
+  const sr = Math.round((state.history.filter(h => h.status === 'answered').length / state.history.length) * 100);
+
+  const note = document.getElementById('analyticsNote');
+  const latDiv = document.getElementById('analyticsLatency');
+  note.style.display = 'none';
+  latDiv.style.display = '';
+  latDiv.innerHTML = `
+    <div class="ac-cards" style="grid-template-columns:repeat(4,1fr)">
+      <div class="ac-card"><div class="ac-lbl">Success Rate</div><div class="ac-val ${sr >= 70 ? 'good' : ''}">${sr}%</div></div>
+      <div class="ac-card"><div class="ac-lbl">P50 Latency</div><div class="ac-val">${Math.round(p50)}ms</div></div>
+      <div class="ac-card"><div class="ac-lbl">P90 Latency</div><div class="ac-val">${Math.round(p90)}ms</div></div>
+      <div class="ac-card"><div class="ac-lbl">Mean</div><div class="ac-val">${Math.round(mean)}ms</div></div>
+    </div>`;
+}
+
+// ---- Copy ----
+function copyAnswer() {
+  if (!state.currentAnswer) return;
+  navigator.clipboard.writeText(state.currentAnswer)
+    .then(() => toast('✓ Copied to clipboard'))
+    .catch(() => toast('Could not copy'));
+}
+
+// ---- Utils ----
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// ---- Init ----
+checkHealth();
+setInterval(checkHealth, 30000);
+</script>
+</body>
+</html>

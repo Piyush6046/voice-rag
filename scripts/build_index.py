@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import numpy as np
 from pinecone import Pinecone
-from fastembed import TextEmbedding
+from backend.pipeline.vectorstore import ONNXEmbedder
 from tqdm import tqdm
 
 from backend.config import settings
@@ -88,8 +88,9 @@ def main():
 
     os.makedirs(settings.INDEX_DIR, exist_ok=True)
 
+    from backend.pipeline.vectorstore import ONNXEmbedder
     print(f"Loading embedding model: {settings.EMBEDDING_MODEL}")
-    embedder = TextEmbedding(model_name=settings.EMBEDDING_MODEL)
+    embedder = ONNXEmbedder(model_name=settings.EMBEDDING_MODEL)
 
     passages = load_passages(args.limit, args.split, args.config)
 
@@ -119,8 +120,7 @@ def main():
 
     print("Embedding chunks (this is the slow one-time cost; retrieval itself will be fast)...")
     t0 = time.time()
-    embeddings_gen = embedder.embed(all_texts, batch_size=64)
-    embeddings = np.asarray(list(embeddings_gen), dtype="float32")
+    embeddings = embedder.encode(all_texts)
     print(f"Embedded {len(all_texts)} chunks in {time.time()-t0:.1f}s, dim={embeddings.shape[1]}")
 
     print("\nConnecting to Pinecone...")

@@ -24,6 +24,65 @@ def _cached_embed(text: str, model_name: str):
     return None  # filled by VectorStore after model loads
 
 
+class ONNXEmbedder:
+    def __init__(self, model_name: str):
+        import onnxruntime as ort
+        from tokenizers import Tokenizer
+        from huggingface_hub import hf_hub_download
+
+        logger.info("Initializing ONNXEmbedder for model: %s ...", model_name)
+        # Map model name to Xenova repo, e.g. intfloat/multilingual-e5-base -> Xenova/multilingual-e5-base
+        repo_name = model_name.split("/")[-1]
+        self.repo_id = f"Xenova/{repo_name}"
+
+        logger.info("Downloading ONNX model files from HF repo: %s", self.repo_id)
+        self.model_path = hf_hub_download(repo_id=self.repo_id, filename="onnx/model.onnx")
+        self.tokenizer_path = hf_hub_download(repo_id=self.repo_id, filename="tokenizer.json")
+
+        logger.info("Loading tokenizer and ONNX session...")
+        self.tokenizer = Tokenizer.from_file(self.tokenizer_path)
+        self.tokenizer.enable_padding(direction="right", pad_id=0, pad_token="[PAD]", length=512)
+        self.tokenizer.enable_truncation(max_length=512)
+
+        # Set thread constraints for Render CPU environment
+        sess_options = ort.SessionOptions()
+        sess_options.intra_op_num_threads = 1
+        sess_options.inter_op_num_threads = 1
+        self.session = ort.InferenceSession(self.model_path, sess_options, providers=["CPUExecutionProvider"])
+        self.expected_inputs = [i.name for i in self.session.get_inputs()]
+        logger.info("ONNXEmbedder ready. Expected inputs: %s", self.expected_inputs)
+
+    def encode(self, texts: List[str]) -> np.ndarray:
+        embeddings = []
+        for text in texts:
+            encoding = self.tokenizer.encode(text)
+            input_ids = np.array([encoding.ids], dtype=np.int64)
+            attention_mask = np.array([encoding.attention_mask], dtype=np.int64)
+
+            inputs = {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask
+            }
+            if "token_type_ids" in self.expected_inputs:
+                inputs["token_type_ids"] = np.array([encoding.type_ids], dtype=np.int64)
+
+            outputs = self.session.run(None, inputs)
+            last_hidden_state = outputs[0]
+
+            # Mean pooling
+            input_mask_expanded = np.expand_dims(attention_mask, axis=-1)
+            sum_embeddings = np.sum(last_hidden_state * input_mask_expanded, axis=1)
+            sum_mask = np.clip(np.sum(input_mask_expanded, axis=1), a_min=1e-9, a_max=None)
+            mean_pooled = sum_embeddings / sum_mask
+
+            # Normalize
+            norm = np.linalg.norm(mean_pooled, axis=1, keepdims=True)
+            normalized = mean_pooled / norm
+            embeddings.append(normalized[0])
+
+        return np.asarray(embeddings, dtype="float32")
+
+
 class VectorStore:
     def __init__(self):
         self.pc: Pinecone | None = None
@@ -39,9 +98,8 @@ class VectorStore:
         return self._embedder
 
     def _load_embedder(self):
-        from fastembed import TextEmbedding
         logger.info("Loading embedding model: %s …", settings.EMBEDDING_MODEL)
-        self._embedder = TextEmbedding(model_name=settings.EMBEDDING_MODEL)
+        self._embedder = ONNXEmbedder(model_name=settings.EMBEDDING_MODEL)
         logger.info("Embedding model ready.")
 
     def warm_up(self):
@@ -49,7 +107,7 @@ class VectorStore:
         first real query incurs zero model-loading overhead."""
         self._load_embedder()
         logger.info("Warming up embedder with dummy encode…")
-        list(self._embedder.embed(["warm up"]))
+        self._embedder.encode(["warm up"])
         logger.info("Embedder warm-up complete.")
 
     def load(self):
@@ -79,7 +137,7 @@ class VectorStore:
             q_emb_list = self._embed_cache[cache_key]
             logger.debug("Embedding cache hit for query.")
         else:
-            q_emb = list(self.embedder.embed([query_input]))
+            q_emb = self.embedder.encode([query_input])
             q_emb_list = np.asarray(q_emb, dtype="float32")[0].tolist()
             self._embed_cache[cache_key] = q_emb_list
             # Keep cache bounded at 256 entries

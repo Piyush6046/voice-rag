@@ -5,3 +5,4 @@ backend/.env
 data/index/
 benchmark_results.json
 .DS_Store
+.hf_cache/

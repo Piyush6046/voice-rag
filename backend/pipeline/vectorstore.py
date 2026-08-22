@@ -26,6 +26,10 @@ def _cached_embed(text: str, model_name: str):
 
 class ONNXEmbedder:
     def __init__(self, model_name: str):
+        import os
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        os.environ["HF_HOME"] = os.path.join(project_root, ".hf_cache")
+
         import onnxruntime as ort
         from tokenizers import Tokenizer
         from huggingface_hub import hf_hub_download

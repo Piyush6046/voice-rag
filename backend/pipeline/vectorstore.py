@@ -39,9 +39,9 @@ class VectorStore:
         return self._embedder
 
     def _load_embedder(self):
-        from sentence_transformers import SentenceTransformer
+        from fastembed import TextEmbedding
         logger.info("Loading embedding model: %s …", settings.EMBEDDING_MODEL)
-        self._embedder = SentenceTransformer(settings.EMBEDDING_MODEL)
+        self._embedder = TextEmbedding(model_name=settings.EMBEDDING_MODEL)
         logger.info("Embedding model ready.")
 
     def warm_up(self):
@@ -49,7 +49,7 @@ class VectorStore:
         first real query incurs zero model-loading overhead."""
         self._load_embedder()
         logger.info("Warming up embedder with dummy encode…")
-        self._embedder.encode(["warm up"], normalize_embeddings=True)
+        list(self._embedder.embed(["warm up"]))
         logger.info("Embedder warm-up complete.")
 
     def load(self):
@@ -79,7 +79,7 @@ class VectorStore:
             q_emb_list = self._embed_cache[cache_key]
             logger.debug("Embedding cache hit for query.")
         else:
-            q_emb = self.embedder.encode([query_input], normalize_embeddings=True)
+            q_emb = list(self.embedder.embed([query_input]))
             q_emb_list = np.asarray(q_emb, dtype="float32")[0].tolist()
             self._embed_cache[cache_key] = q_emb_list
             # Keep cache bounded at 256 entries
